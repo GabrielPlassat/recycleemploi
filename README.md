@@ -34,10 +34,22 @@ Aucun logiciel n'est à installer sur votre ordinateur : tout se fait dans le na
 
 L'application est en ligne au bout de deux ou trois minutes.
 
+## Le fichier BMO (onglet Emploi)
+
+L'application le télécharge seule avec le bouton « Télécharger l'enquête BMO 2026 ». Si le téléchargement échoue, déposez le fichier à la main :
+
+- **Fichier** : `Base-open-data-BMO-2026.xlsx` (Excel, environ 3,8 Mo).
+- **Lien direct** : [Base-open-data-BMO-2026.xlsx](https://www.francetravail.org/files/live/sites/peorg/files/documents/Statistiques-et-analyses/Open-data/BMO/Base-open-data-BMO-2026.xlsx)
+- **Autres accès** : sur [statistiques.francetravail.org/bmo](https://statistiques.francetravail.org/bmo/), menu « Statistiques & analyses », puis « Open data » ; ou sur data.gouv.fr, jeu [Enquête Besoins en Main d'Oeuvre (BMO)](https://www.data.gouv.fr/datasets/enquete-besoins-en-main-doeuvre-bmo), ressource « Enquête BMO 2026 ».
+
+Le fichier a deux feuilles : « Description_des_variables » et « BMO_2026_open_data » (53 786 lignes, une par métier et par bassin d'emploi). Colonnes utilisées : `Nom métier BMO`, `Dept`, `met` (projets de recrutement), `xmet` (projets jugés difficiles). Les petits effectifs sont masqués par « * ».
+
+Le BMO n'a pas de métier « cycles ». Les mécaniciens cycles sont comptés dans **Ouvriers mécaniciens de véhicules (G0B41)**, le mot-clé par défaut. Autres métiers utiles : « Conducteurs et livreurs sur courte distance » (J3X42), « Ouvriers qualifiés en ajustement, montage et assemblage mécanique » (D2X31), « Techniciens et agents de maîtrise en maintenance de véhicules » (G1X71), « Carrossiers automobiles » (G0B40).
+
 ## Points à vérifier
 
 - La catégorie 1 de la filière « articles de sport et loisirs » correspond très probablement aux cycles : à confirmer dans le référentiel de l'ADEME.
 - La filière véhicules (VHCL) ne publie pour l'instant qu'une année de mises sur le marché (2025).
-- Les noms de colonnes du fichier BMO peuvent changer d'une année à l'autre. L'application les détecte seule ; sinon, ils se corrigent dans l'encadré « Colonnes utilisées ».
+- Les noms de colonnes du fichier BMO peuvent changer d'une année à l'autre. L'application les détecte seule (vérifié sur le fichier 2026) ; sinon, ils se corrigent dans l'encadré « Colonnes utilisées ».
 
 Données sous Licence Ouverte (Etalab).

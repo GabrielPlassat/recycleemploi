@@ -107,15 +107,18 @@ def telecharger_bmo() -> bytes:
 
 
 def lire_bmo(contenu: bytes) -> pd.DataFrame:
-    """Lit le fichier BMO en repérant la ligne d'en-tête automatiquement."""
-    apercu = pd.read_excel(BytesIO(contenu), header=None, nrows=15)
-    ligne_entete = 0
-    for i, ligne in apercu.iterrows():
-        textes = [str(v).strip().lower() for v in ligne.tolist()]
-        if "met" in textes or any("métier" in t or "metier" in t for t in textes):
-            ligne_entete = i
-            break
-    return pd.read_excel(BytesIO(contenu), header=ligne_entete)
+    """Lit le fichier BMO : trouve la feuille de données et sa ligne d'en-tête.
+
+    Dans le fichier 2026, la première feuille décrit les variables et les
+    données sont dans la feuille « BMO_2026_open_data ».
+    """
+    feuilles = pd.read_excel(BytesIO(contenu), sheet_name=None, header=None, nrows=15)
+    for nom, apercu in feuilles.items():
+        for i, ligne in apercu.iterrows():
+            textes = [str(v).strip().lower() for v in ligne.tolist()]
+            if "met" in textes:
+                return pd.read_excel(BytesIO(contenu), sheet_name=nom, header=i)
+    raise ValueError("Colonne « met » introuvable : ce fichier n'est pas une base BMO.")
 
 
 def nombre(n: float) -> str:
@@ -256,13 +259,23 @@ with onglet_emploi:
             st.session_state["bmo"] = contenu
         except Exception as erreur:
             st.error(f"Téléchargement impossible ({erreur}). Utilisez le dépôt de fichier ci-dessous.")
-    fichier = st.file_uploader("Ou déposez le fichier BMO (.xlsx)", type="xlsx")
+    fichier = st.file_uploader(
+        "Ou déposez le fichier BMO (.xlsx)",
+        type="xlsx",
+        help="Fichier « Base-open-data-BMO-2026.xlsx » (environ 3,8 Mo), téléchargeable depuis "
+        "la page Open data de France Travail ou depuis data.gouv.fr "
+        "(jeu « Enquête Besoins en Main d'Oeuvre (BMO) »).",
+    )
     if fichier is not None:
         st.session_state["bmo"] = fichier.getvalue()
     contenu = st.session_state.get("bmo")
 
     if contenu:
-        bmo = lire_bmo(contenu)
+        try:
+            bmo = lire_bmo(contenu)
+        except Exception as erreur:
+            st.error(f"Fichier illisible : {erreur}")
+            st.stop()
         cols = [str(c) for c in bmo.columns]
         bmo.columns = cols
         with st.expander("Colonnes utilisées (détectées automatiquement, modifiables)"):
@@ -271,7 +284,13 @@ with onglet_emploi:
             col_projets = st.selectbox("Projets de recrutement", cols, index=deviner(cols, ["met"]))
             col_difficiles = st.selectbox("Projets difficiles", cols, index=deviner(cols, ["xmet"]))
 
-        mot_cle = st.text_input("Mot-clé du métier", "cycles")
+        mot_cle = st.text_input(
+            "Mot-clé du métier",
+            "mécaniciens de véhicules",
+            help="Le BMO n'a pas de métier « cycles » : les mécaniciens cycles sont comptés dans "
+            "« Ouvriers mécaniciens de véhicules » (G0B41). Autres pistes : « livreurs », "
+            "« montage et assemblage mécanique », « maintenance de véhicules ».",
+        )
         filtre = bmo[col_metier].astype(str).str.contains(mot_cle, case=False, na=False)
         metiers = sorted(bmo.loc[filtre, col_metier].astype(str).unique())
         if not metiers:
@@ -295,6 +314,10 @@ with onglet_emploi:
                 100 * croise["projets_difficiles"] / croise["projets_recrutement"].where(croise["projets_recrutement"] > 0)
             ).round(0)
 
+            st.caption(
+                "Les petits effectifs sont masqués par France Travail (« * ») pour le secret statistique : "
+                "les totaux par département sont donc des minimums."
+            )
             c1, c2 = st.columns(2)
             c1.metric("Projets de recrutement", nombre(croise["projets_recrutement"].sum()))
             c2.metric("Dont difficiles", nombre(croise["projets_difficiles"].sum()))
